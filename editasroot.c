@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 
 #define TEMPFILEPATTERN "tmpXXXXXX"
@@ -16,6 +17,9 @@
 
 static const char *argv0 = "editasroot";
 static const char *unlink_this = NULL;
+static int ttyfd = -1;
+static int tcattrs_fetched = 0;
+static struct termios tcattrs;
 
 
 static void
@@ -32,6 +36,12 @@ cleanup(void)
 	if (unlink_this) {
 		unlink(unlink_this);
 		unlink_this = NULL;
+	}
+	if (ttyfd >= 0) {
+		if (tcattrs_fetched)
+			tcsetattr(ttyfd, TCSAFLUSH, &tcattrs);
+		close(ttyfd);
+		ttyfd = -1;
 	}
 }
 
@@ -50,15 +60,9 @@ static const char *
 get_editor(void)
 {
 	const char *editor = NULL;
-	int fd, isbg;
+	int isbg;
 
-	fd = open(_PATH_TTY, O_RDONLY);
-        if (fd < 0) {
-		fprintf(stderr, "%s: open %s O_RDONLY: %s", argv0, _PATH_TTY, strerror(errno));
-		exit(1);
-	}
-        isbg = getpgrp() != tcgetpgrp(fd);
-        close(fd);
+	isbg = getpgrp() != tcgetpgrp(ttyfd);
 
 	if (isbg)
 		editor = getenv("VISUAL");
@@ -137,6 +141,7 @@ run_child(const char *file, int fd, int close_this)
 	case 0:
 		close(STDIN_FILENO);
 		close(STDOUT_FILENO);
+		close(ttyfd);
 		close(close_this);
 		prctl(PR_SET_PDEATHSIG, SIGKILL);
 		sprintf(fdstr, "%i", fd);
@@ -195,6 +200,29 @@ main(int argc, char *argv[])
 	if (--argc != 1)
 		usage();
 
+	if (atexit(cleanup)) {
+		fprintf(stderr, "%s: atexit: %s", argv0, strerror(errno));
+		exit(1);
+	}
+
+	/* Get terminal, needed for attributes and to chekh if VISUAL or EDITOR should be used */
+	ttyfd = open(_PATH_TTY, O_RDONLY);
+	if (ttyfd < 0) {
+		fprintf(stderr, "%s: open %s O_RDONLY: %s", argv0, _PATH_TTY, strerror(errno));
+		exit(1);
+	}
+
+	/* Get terminal attributes, needed in case of interrupt during asroot prompt (didn't find a better alternative) */
+	memset(&tcattrs, 0, sizeof(tcattrs));
+	if (tcgetattr(ttyfd, &tcattrs)) {
+		fprintf(stderr, "%s: tcgetattr %s: %s\n", argv0, _PATH_TTY, strerror(errno));
+		exit(1);
+	}
+	tcattrs_fetched = 1;
+
+	/* Check that VISUAL or EDITOR is set before prompting for password,
+	 * that way, the user sees why vi(1) is opened before it is being,
+	 * opened, and can also abort and set EDITOR */
 	editor = get_editor();
 
 	/* Start copier, with a bidirectional channel to it for copying the file */
@@ -218,10 +246,6 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	unlink_this = path;
-	if (atexit(cleanup)) {
-		fprintf(stderr, "%s: atexit: %s", argv0, strerror(errno));
-		exit(1);
-	}
 	copy_file(fd, path, fds[0], "<socket to child>");
 	if (close(fd)) {
 		fprintf(stderr, "%s: write %s: %s", argv0, path, strerror(errno));
@@ -231,6 +255,9 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: shutdown <socket to parent> SHUT_RD: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
+
+	/* Don't need to restore terminal attributes, if we got here, asroot as not interrupted */
+	close(ttyfd);
 
 	/* Start file editor */
 	run_editor(editor, path, fds[0]);
