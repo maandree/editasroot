@@ -24,12 +24,13 @@ install: editasroot copier
 	mkdir -p -- "$(DESTDIR)$(LIBEXECDIR)"
 	mkdir -p -- "$(DESTDIR)$(MANPREFIX)/man8/"
 	cp -- editasroot "$(DESTDIR)$(PREFIX)/bin/"
-	cp -- editasroot.1 "$(DESTDIR)$(MANPREFIX)/man8/"
+	cp -- editasroot.8 "$(DESTDIR)$(MANPREFIX)/man8/"
 	cp -- copier "$(DESTDIR)$(LIBEXECDIR)/"
 
 uninstall:
 	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/editasroot"
-	-rm -f -- "$(DESTDIR)$(LIBEXECDIR)/editasroot-copier"
+	-rm -f -- "$(DESTDIR)$(LIBEXECDIR)/copier"
+	-rmdir -- "$(DESTDIR)$(LIBEXECDIR)"
 	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man8/editasroot.8"
 
 clean:

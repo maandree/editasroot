@@ -1,0 +1,85 @@
+.TH EDITASROOT 8 editasroot
+
+.SH NAME
+editasroot - edit a file that requires root access
+
+.SH SYNOPSIS
+.B editasroot
+.I file
+
+.SH DESCRIPTION
+The
+.B editasroot
+utility uses
+.BR asroot(8)
+to get access to the specified
+.IR file ,
+creates a copy of the file and edits it with the
+user's default editor, and then saves the new
+content to the access restricted file.
+
+.SH OPTIONS
+The
+.B editasroot
+utility conforms to the Base Definitions volume of POSIX.1-2017,
+.IR "Section 12.2" ,
+.IR "Utility Syntax Guidelines" .
+.PP
+No option are supported.
+
+.SH OPERANDS
+The following operand is supported:
+.TP
+.I file
+The file to edit.
+
+.SH ENVIRONMENT VARIABLES
+The following environment variables affects the execution of
+.BR editasroot :
+.TP
+.SH EDITOR
+Filename of the editor to edit the file path if the
+program is started in the foreground or if
+.B VISUAL
+is unset. (Default is
+.BR vi )
+.TP
+.SH PATH
+Default. See to the Base Definitions volume of POSIX.1-2017, Section 8.3, Other Environment Variables.
+.TP
+.SH VISUAL
+Filename of the editor to edit the file path if the
+program is started in the background.
+
+.SH EXIT STATUS
+Default.
+
+.SH CONSEQUENCES OF ERRORS
+Default.
+
+.SH APPLICATION USAGE
+None.
+
+.SH EXAMPLES
+None.
+
+.SH CAVEATS
+The content of the file becomes accessible to the user and
+can be read, and potentially edited (good timing is needed),
+by malicious programs. If this is a security issue, do not
+run this program!
+
+.SH RATIONALE
+This utility lets users edit a file that requires root access,
+but with his own editor configurations.
+
+.SH FUTURE DIRECTIONS
+None.
+
+.SH SEE ALSO
+.BR asroot (8),
+.BR sudoedit (8)
+
+.SH AUTHORS
+Mattias Andrée
+.RI < maandree@kth.se >

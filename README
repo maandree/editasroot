@@ -1,0 +1,36 @@
+NAME
+	editasroot - edit a file that requires root access
+
+SYNOPSIS
+	editasroot file
+
+DESCRIPTION
+	The editasroot utility uses asroot(8) to get access to the
+	specified file, creates a copy of the file and edits it with
+	the user's default editor, and then saves the new content to
+	the access restricted file.
+
+OPTIONS
+	The editasroot utility conforms to the Base Definitions volume
+	of POSIX.1-2017, Section 12.2, Utility Syntax Guidelines.
+
+	No option are supported.
+
+OPERANDS
+	The following operand is supported:
+
+	file
+		The file to edit.
+
+CAVEATS
+	The content of the file becomes accessible to the user and
+	can be read, and potentially edited (good timing is needed),
+	by malicious programs. If this is a security issue, do not
+	run this program!
+
+RATIONALE
+	This utility lets users edit a file that requires root access,
+	but with his own editor configurations.
+
+SEE ALSO
+	asroot(8), sudoedit(8)
