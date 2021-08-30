@@ -1,0 +1,9 @@
+PREFIX     = /usr
+MANPREFIX  = $(PREFIX)/share/man
+LIBEXECDIR = $(PREFIX)/libexec/editasroot
+
+CC = cc
+
+CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700 -D'LIBEXECDIR="$(LIBEXECDIR)"'
+CFLAGS   = -std=c99 -Wall -O2
+LDFLAGS  = -s
