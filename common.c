@@ -35,8 +35,8 @@ copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname, in
 
 		r += (ssize_t)read_off;
 		for (p = ok_off; p < r; p += w) {
-			w = write(destfd, buf, (size_t)(r - p));
-			if (r <= 0) {
+			w = write(destfd, &buf[p], (size_t)(r - p));
+			if (w <= 0) {
 				fprintf(stderr, "%s: write %s: %s\n", argv0, destfname, strerror(errno));
 				exit(1);
 			}
@@ -45,7 +45,7 @@ copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname, in
 
 	if (!okp) {
 		w = write(destfd, buf, 1);
-		if (r <= 0) {
+		if (w <= 0) {
 			fprintf(stderr, "%s: write %s: %s\n", argv0, destfname, strerror(errno));
 			exit(1);
 		}
