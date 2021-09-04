@@ -80,7 +80,7 @@ get_tmpfile_pattern(void)
 
 	path = malloc(strlen(tmpdir) + sizeof("/"TEMPFILEPATTERN));
 	if (!path) {
-		fprintf(stderr, "%s: malloc: %s", argv0, strerror(ENOMEM));
+		fprintf(stderr, "%s: malloc: %s\n", argv0, strerror(ENOMEM));
 		exit(1);
 	}
 	p = stpcpy(path, tmpdir);
@@ -99,7 +99,7 @@ run_child(const char *file, int fd, int close_this)
 
 	switch (pid = fork()) {
 	case -1:
-		fprintf(stderr, "%s: fork: %s", argv0, strerror(errno));
+		fprintf(stderr, "%s: fork: %s\n", argv0, strerror(errno));
 		exit(1);
 
 	case 0:
@@ -127,7 +127,7 @@ run_editor(const char *editor, const char *file, int close_this)
 
 	switch (pid = fork()) {
 	case -1:
-		fprintf(stderr, "%s: fork: %s", argv0, strerror(errno));
+		fprintf(stderr, "%s: fork: %s\n", argv0, strerror(errno));
 		exit(1);
 
 	case 0:
@@ -141,7 +141,7 @@ run_editor(const char *editor, const char *file, int close_this)
 	}
 
 	if (waitpid(pid, &status, 0) != pid) {
-		fprintf(stderr, "%s: waitpid %s 0: %s", argv0, editor, strerror(errno));
+		fprintf(stderr, "%s: waitpid %s 0: %s\n", argv0, editor, strerror(errno));
 		exit(1);
 	}
 
@@ -165,14 +165,14 @@ main(int argc, char *argv[])
 		usage();
 
 	if (atexit(cleanup)) {
-		fprintf(stderr, "%s: atexit: %s", argv0, strerror(errno));
+		fprintf(stderr, "%s: atexit: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
 
 	/* Get terminal, needed for attributes and to chekh if VISUAL or EDITOR should be used */
 	ttyfd = open(_PATH_TTY, O_RDONLY);
 	if (ttyfd < 0) {
-		fprintf(stderr, "%s: open %s O_RDONLY: %s", argv0, _PATH_TTY, strerror(errno));
+		fprintf(stderr, "%s: open %s O_RDONLY: %s\n", argv0, _PATH_TTY, strerror(errno));
 		exit(1);
 	}
 
@@ -191,7 +191,7 @@ main(int argc, char *argv[])
 
 	/* Start copier, with a bidirectional channel to it for copying the file */
 	if (socketpair(PF_LOCAL, SOCK_SEQPACKET, 0, fds)) {
-		fprintf(stderr, "%s: socketpair PF_LOCAL SOCK_SEQPACKET 0: %s", argv0, strerror(errno));
+		fprintf(stderr, "%s: socketpair PF_LOCAL SOCK_SEQPACKET 0: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
 	pid = run_child(argv[0], fds[1], fds[0]);
@@ -206,13 +206,13 @@ main(int argc, char *argv[])
 	path = get_tmpfile_pattern();
 	fd = mkstemp(path);
 	if (fd < 0) {
-		fprintf(stderr, "%s: mkstemp %s: %s", argv0, path, strerror(errno));
+		fprintf(stderr, "%s: mkstemp %s: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
 	unlink_this = path;
 	copy_file(fd, path, fds[0], "<socket to child>", &ok);
 	if (close(fd)) {
-		fprintf(stderr, "%s: write %s: %s", argv0, path, strerror(errno));
+		fprintf(stderr, "%s: write %s: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
 	if (shutdown(fds[0], SHUT_RD)) {
@@ -233,16 +233,16 @@ main(int argc, char *argv[])
 	/* Rewrite file from tmpfile and unlink tmpfile */
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "%s: open %s O_RDONLY: %s", argv0, path, strerror(errno));
+		fprintf(stderr, "%s: open %s O_RDONLY: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
 	copy_file(fds[0], "<socket to child>", fd, path, NULL);
 	if (close(fd)) {
-		fprintf(stderr, "%s: read %s: %s", argv0, path, strerror(errno));
+		fprintf(stderr, "%s: read %s: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
 	if (close(fds[0])) {
-		fprintf(stderr, "%s: write <socket to child>: %s", argv0, strerror(errno));
+		fprintf(stderr, "%s: write <socket to child>: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
 	unlink(unlink_this);
@@ -251,7 +251,7 @@ main(int argc, char *argv[])
 
 	/* Wait for exit copier to exit */
 	if (waitpid(pid, &status, 0) != pid) {
-		fprintf(stderr, "%s: waitpid <child> 0: %s", argv0, strerror(errno));
+		fprintf(stderr, "%s: waitpid <child> 0: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
 	return WIFEXITED(status) ? WEXITSTATUS(status) : 1;

@@ -24,7 +24,7 @@ copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname, in
 		if (r <= 0) {
 			if (!r)
 				break;
-			fprintf(stderr, "%s: read %s: %s", argv0, srcfname, strerror(errno));
+			fprintf(stderr, "%s: read %s: %s\n", argv0, srcfname, strerror(errno));
 			exit(1);
 		}
 
@@ -37,7 +37,7 @@ copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname, in
 		for (p = ok_off; p < r; p += w) {
 			w = write(destfd, buf, (size_t)(r - p));
 			if (r <= 0) {
-				fprintf(stderr, "%s: write %s: %s", argv0, destfname, strerror(errno));
+				fprintf(stderr, "%s: write %s: %s\n", argv0, destfname, strerror(errno));
 				exit(1);
 			}
 		}
@@ -46,7 +46,7 @@ copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname, in
 	if (!okp) {
 		w = write(destfd, buf, 1);
 		if (r <= 0) {
-			fprintf(stderr, "%s: write %s: %s", argv0, destfname, strerror(errno));
+			fprintf(stderr, "%s: write %s: %s\n", argv0, destfname, strerror(errno));
 			exit(1);
 		}
 	}
