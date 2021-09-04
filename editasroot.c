@@ -252,7 +252,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	if (shutdown(fds[0], SHUT_RD)) {
-		fprintf(stderr, "%s: shutdown <socket to parent> SHUT_RD: %s\n", argv0, strerror(errno));
+		fprintf(stderr, "%s: shutdown <socket to child> SHUT_RD: %s\n", argv0, strerror(errno));
 		exit(1);
 	}
 
