@@ -230,12 +230,6 @@ main(int argc, char *argv[])
 	/* Start file editor */
 	run_editor(editor, path, fds[0]);
 
-	/* Signal to child that editor exited as expected */
-	if (write(fds[0], &(char){1}, 1) != 1) {
-		fprintf(stderr, "%s: write <socket to child>: %s", argv0, strerror(errno));
-		exit(1);
-	}
-
 	/* Rewrite file from tmpfile and unlink tmpfile */
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {

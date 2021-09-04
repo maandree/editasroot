@@ -22,6 +22,7 @@ main(int argc, char *argv[])
 	path = argv[0];
 	parentfd = atoi(argv[1]);
 
+	/* Send content of file to parent */
 	filefd = open(path, O_RDWR); /* O_RDWR establishes that we can indeed write to the file */
 	if (filefd < 0) {
 		fprintf(stderr, "%s: open %s O_RDWR: %s\n", argv0, path, strerror(errno));
@@ -37,13 +38,18 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	r = read(parentfd, &b, 1);
-	if (r != 1) {
-		if (r)
+	/* Wait for parent to start sending the new file content,
+	 * so that O_TRUNC does not cause the file to be truncated
+	 * without new content being sent in case the parent exited
+	 * abnormally. */
+	r = recv(parentfd, &b, 1, MSG_PEEK);
+	if (r <= 0) {
+		if (r < 0)
 			fprintf(stderr, "%s: read %s: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
 
+	/* Rewrite file with content sent from parent */
 	filefd = open(path, O_WRONLY | O_TRUNC);
 	if (filefd < 0) {
 		fprintf(stderr, "%s: open %s O_WRONLY|O_TRUNC: %s\n", argv0, path, strerror(errno));
