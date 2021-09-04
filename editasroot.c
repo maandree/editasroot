@@ -1,21 +1,11 @@
 /* See LICENSE file for copyright and license details. */
-#include <sys/prctl.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <paths.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
+#include "common.h"
 
 #define TEMPFILEPATTERN "tmpXXXXXX"
 
 
-static const char *argv0 = "editasroot";
+const char *argv0 = "editasroot";
+
 static const char *unlink_this = NULL;
 static int ttyfd = -1;
 static int tcattrs_fetched = 0;
@@ -101,32 +91,6 @@ get_tmpfile_pattern(void)
 }
 
 
-static void
-copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname)
-{
-	char buf[BUFSIZ];
-	ssize_t r, w, p;
-
-	for (;;) {
-		r = read(srcfd, buf, sizeof(buf));
-		if (r <= 0) {
-			if (!r)
-				break;
-			fprintf(stderr, "%s: read %s: %s", argv0, srcfname, strerror(errno));
-			exit(1);
-		}
-
-		for (p = 0; p < r; p += w) {
-			w = write(destfd, buf, (size_t)(r - p));
-			if (r <= 0) {
-				fprintf(stderr, "%s: write %s: %s", argv0, destfname, strerror(errno));
-				exit(1);
-			}
-		}
-	}
-}
-
-
 static pid_t
 run_child(const char *file, int fd, int close_this)
 {
@@ -191,7 +155,7 @@ main(int argc, char *argv[])
 {
 	const char *editor;
 	char *path;
-	int fd, fds[2], status, i;
+	int fd, fds[2], status, i, ok;
 	pid_t pid;
 
 	if (!argc)
@@ -226,8 +190,8 @@ main(int argc, char *argv[])
 	editor = get_editor();
 
 	/* Start copier, with a bidirectional channel to it for copying the file */
-	if (socketpair(PF_LOCAL, SOCK_STREAM, 0, fds)) {
-		fprintf(stderr, "%s: socketpair PF_LOCAL SOCK_STREAM 0: %s", argv0, strerror(errno));
+	if (socketpair(PF_LOCAL, SOCK_SEQPACKET, 0, fds)) {
+		fprintf(stderr, "%s: socketpair PF_LOCAL SOCK_SEQPACKET 0: %s", argv0, strerror(errno));
 		exit(1);
 	}
 	pid = run_child(argv[0], fds[1], fds[0]);
@@ -246,13 +210,17 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	unlink_this = path;
-	copy_file(fd, path, fds[0], "<socket to child>");
+	copy_file(fd, path, fds[0], "<socket to child>", &ok);
 	if (close(fd)) {
 		fprintf(stderr, "%s: write %s: %s", argv0, path, strerror(errno));
 		exit(1);
 	}
 	if (shutdown(fds[0], SHUT_RD)) {
 		fprintf(stderr, "%s: shutdown <socket to child> SHUT_RD: %s\n", argv0, strerror(errno));
+		exit(1);
+	}
+	if (!ok) {
+		fprintf(stderr, "%s: child exited before sending file termination message\n", argv0);
 		exit(1);
 	}
 
@@ -274,7 +242,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: open %s O_RDONLY: %s", argv0, path, strerror(errno));
 		exit(1);
 	}
-	copy_file(fds[0], "<socket to child>", fd, path);
+	copy_file(fds[0], "<socket to child>", fd, path, NULL);
 	if (close(fd)) {
 		fprintf(stderr, "%s: read %s: %s", argv0, path, strerror(errno));
 		exit(1);

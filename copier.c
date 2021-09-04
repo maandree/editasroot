@@ -1,46 +1,14 @@
 /* See LICENSE file for copyright and license details. */
-#include <sys/socket.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "common.h"
 
 
-static const char *argv0 = "editasroot/copier";
-
-
-static void
-copy_file(int destfd, const char *destfname, int srcfd, const char *srcfname)
-{
-	char buf[BUFSIZ];
-	ssize_t r, w, p;
-
-	for (;;) {
-		r = read(srcfd, buf, sizeof(buf));
-		if (r <= 0) {
-			if (!r)
-				break;
-			fprintf(stderr, "%s: read %s: %s", argv0, srcfname, strerror(errno));
-			exit(1);
-		}
-
-		for (p = 0; p < r; p += w) {
-			w = write(destfd, buf, (size_t)(r - p));
-			if (r <= 0) {
-				fprintf(stderr, "%s: write %s: %s", argv0, destfname, strerror(errno));
-				exit(1);
-			}
-		}
-	}
-}
+const char *argv0 = "editasroot/copier";
 
 
 int
 main(int argc, char *argv[])
 {
-	int filefd, parentfd;
+	int filefd, parentfd, ok;
 	const char *path;
 	ssize_t r;
 	char b;
@@ -59,7 +27,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: open %s O_RDWR: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
-	copy_file(parentfd, "<socket to parent>", filefd, path);
+	copy_file(parentfd, "<socket to parent>", filefd, path, NULL);
 	if (close(filefd)) {
 		fprintf(stderr, "%s: read %s: %s\n", argv0, path, strerror(errno));
 		exit(1);
@@ -81,13 +49,17 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: open %s O_WRONLY|O_TRUNC: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
-	copy_file(filefd, path, parentfd, "<socket to parent>");
+	copy_file(filefd, path, parentfd, "<socket to parent>", &ok);
 	if (close(filefd)) {
 		fprintf(stderr, "%s: write %s: %s\n", argv0, path, strerror(errno));
 		exit(1);
 	}
 	if (close(parentfd)) {
 		fprintf(stderr, "%s: read <socket to parent>: %s\n", argv0, strerror(errno));
+		exit(1);
+	}
+	if (!ok) {
+		fprintf(stderr, "%s: parent exited before sending file termination message, file may be truncated\n", argv0);
 		exit(1);
 	}
 

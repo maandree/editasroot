@@ -5,19 +5,23 @@ include $(CONFIGFILE)
 
 OBJ =\
 	editasroot.o\
+	common.o\
 	copier.o
 
+HDR =\
+	common.h
+
 all: editasroot copier
-$(OBJ): $(@:.o=.c)
+$(OBJ): $(HDR)
 
 .c.o:
 	$(CC) -c -o $@ $< $(CFLAGS) $(CPPFLAGS)
 
-editasroot: editasroot.o
-	$(CC) -o $@ $@.o $(LDFLAGS)
+editasroot: editasroot.o common.o
+	$(CC) -o $@ $@.o common.o $(LDFLAGS)
 
-copier: copier.o
-	$(CC) -o $@ $@.o $(LDFLAGS)
+copier: copier.o common.o
+	$(CC) -o $@ $@.o common.o $(LDFLAGS)
 
 install: editasroot copier
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
