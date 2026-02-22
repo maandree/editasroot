@@ -14,7 +14,7 @@ OPTIONS
 	The editasroot utility conforms to the Base Definitions volume
 	of POSIX.1-2017, Section 12.2, Utility Syntax Guidelines.
 
-	No option are supported.
+	No options are supported.
 
 OPERANDS
 	The following operand is supported:

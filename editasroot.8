@@ -1,4 +1,4 @@
-.TH EDITASROOT 8 editasroot
+.TH EDITASROOT 8 EDITASROOT
 
 .SH NAME
 editasroot - edit a file that requires root access
@@ -25,7 +25,7 @@ utility conforms to the Base Definitions volume of POSIX.1-2017,
 .IR "Section 12.2" ,
 .IR "Utility Syntax Guidelines" .
 .PP
-No option are supported.
+No options are supported.
 
 .SH OPERANDS
 The following operand is supported:
@@ -34,20 +34,20 @@ The following operand is supported:
 The file to edit.
 
 .SH ENVIRONMENT VARIABLES
-The following environment variables affects the execution of
+The following environment variables affect the execution of
 .BR editasroot :
 .TP
-.SH EDITOR
+.B EDITOR
 Filename of the editor to edit the file path if the
 program is started in the foreground or if
 .B VISUAL
 is unset. (Default is
 .BR vi )
 .TP
-.SH PATH
-Default. See to the Base Definitions volume of POSIX.1-2017, Section 8.3, Other Environment Variables.
+.B PATH
+Default. See the Base Definitions volume of POSIX.1-2017, Section 8.3, Other Environment Variables.
 .TP
-.SH VISUAL
+.B VISUAL
 Filename of the editor to edit the file path if the
 program is started in the background.
 
